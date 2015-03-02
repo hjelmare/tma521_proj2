@@ -1,0 +1,295 @@
+reset;
+
+
+option solver cplexamp;
+model MTC3_fix_y.mod;  						# load the optimization model
+
+data 20101117_15j_v_eng.dat;   					# load the model data
+
+problem MTC3_mach: t_mach, z_mach, y_mach, s_mach, h_mach, Finish_times_and_tardiness_mach, opconstraints_mach,
+					flexconstraints_mach, both_y_not_1_constraints_mach, at_least_one_y_constraints_mach,
+					earliest_start_constraints_mach, start_constraints1_mach,
+					start_constraints2_mach, completion_time_constraints_mach, interop_time_constraints_mach,
+					tardiness_constraints_mach;
+option cplex_options
+	'clocktype=2'	#type 1 is CPU-seconds, type 2 is wall-clock seconds
+	'mipdisplay=2'
+	'timing=1'
+	'mipinterval=2000'
+	'timelimit=7200'	#stops after 7200 CPU-seconds
+#	'mipgap=0.1'
+;
+
+problem MTC3_feas: t, z, y, s, h, Process_times_and_tardiness_feas, opconstraints_feas,
+					flexconstraints, both_y_not_1_constraints, at_least_one_y_constraints,
+					earliest_start_constraints, same_job_constraints, start_constraints1,
+					start_constraints2, completion_time_constraints, interop_time_constraints,
+#					t2_fixed_constraints_feas,					
+					y_fixed_constraints_feas, z2_fixed_constraints_feas, tardiness_constraints;
+
+option cplex_options
+	'clocktype=2'	#type 1 is CPU-seconds, type 2 is wall-clock seconds
+	'mipdisplay=2'
+	'timing=1'
+	'mipinterval=2000';
+option presolve_eps 1.0e-10;
+
+
+#-------------------------------------- reset all release date for all jobs q which belong to (j,q) in the set Q ----------------------------------#
+param end_of_chain {JOBS};
+param chain_order {JOBS};
+param v_mach_jq_ext {Q_PREC};
+
+for {j in 1..maxjobs} let end_of_chain[j] := 0;
+for {j in 1..maxjobs} let chain_order[j] := 0;
+
+for {j_prec1 in Q_PREC} {
+	let v_mach_jq_ext[j_prec1] := proc_time_mach[j_prec1] + p_postmach[j_prec1] + v_mach_jq[j_prec1];
+	if (end_of_chain[j_prec1] == 0) then {
+		let r_mach[q_follow[j_prec1]] := r_mach[j_prec1] + v_mach_jq_ext[j_prec1];
+		let chain_order[j_prec1] := 1;
+		let chain_order[q_follow[j_prec1]] := 2;
+		let end_of_chain[q_follow[j_prec1]] := 1;
+	}
+	else if (end_of_chain[j_prec1] == 1) then {
+		let r_mach[q_follow[j_prec1]] := r_mach[j_prec1] + v_mach_jq_ext[j_prec1];
+		let chain_order[q_follow[j_prec1]] := chain_order[j_prec1] + 1;
+		let end_of_chain[j_prec1] := 0;
+		let end_of_chain[q_follow[j_prec1]] := 1;
+	}
+}
+for {counter in 1..4} {
+	for {j in 1..maxjobs} {
+		if (end_of_chain[j] == 1) then {
+			for {j_prec2 in Q_PREC} {
+				if (j_prec2 == j) then {
+					let r_mach[q_follow[j_prec2]] := r_mach[j_prec2] + r_mach[q_follow[j_prec2]];
+					let chain_order[q_follow[j_prec2]] := chain_order[j_prec2] + 1;
+					let end_of_chain[j_prec2] := 0;
+					let end_of_chain[q_follow[j_prec2]] := 1;
+				}
+			}
+		}
+	}
+}
+
+display r_mach;
+display chain_order;
+display end_of_chain;
+
+#-------------------------------------- HEURISTIC to determine better end of planning horizon, T----------------------------------#
+
+
+# These parameters are used for the heuristic: param z_heur[j,k], s_time [k], s_max, s_min, chosen_k, proc_time_max, start_time[j]
+# parameters for the heuristic to find a good feasible solution, and a T_HORIZON (M)
+
+param s_time {K_mach_RESOURCES};
+param s_max;
+param s_min;
+param s_min2;
+param chosen_k symbolic;
+param chosen_k2 symbolic;
+param proc_time_max;
+param start_time {JOBS};
+param waiting_list{Q_PREC};
+param r_heur {JOBS};			# release dates for the heuristic
+param z_heur {JOBS,K_mach_RESOURCES};	# The solution found by the heuristic
+
+# OBS: All jobs should be ordered according to increasing release dates, so job nr 1 has the lowest release date.
+# Initial values
+for {j in JOBS, k in K_mach_RESOURCES} let z_heur[j,k] := 0;
+# The time when resource k is available for the first time:
+for {k in K_mach_RESOURCES} let s_time[k] := a[k];
+let proc_time_max := 0;
+# The release date for the heuristics are intitially set to the real release dates.
+for {j in JOBS} {
+let r_heur[j] := r_mach[j];
+let start_time[j] := M;			#The start_time of all jobs are given T-HORIZON as initial values
+}
+# Initial values for the waiting_list
+for {j_prec in Q_PREC} let waiting_list[j_prec] := 0;
+
+for {j in 1..maxjobs} {
+	let s_min := M;
+# 	Below a resource k is chosen in order to schedule job j. 
+	for {k in K_mach_RESOURCES}  {
+		if ( lambda_mach[j,k]==1  ) then { 
+			if (s_min > s_time[k]) then {
+				let s_min := s_time[k];
+				let chosen_k := k;
+				if (r_heur[j] > s_min) then {
+					let s_min := r_heur[j];
+ 						# s_min cannot be better than r_heur for this job so let's exit the loop
+					break;
+				}	
+			}
+		}		
+	}
+	let z_heur[j,chosen_k] := 1;
+	let start_time[j] := s_min;
+	let s_time[chosen_k] := s_min + proc_time_mach[j];
+	display z_heur[j,chosen_k],j,chosen_k,s_min;	
+	if (proc_time_max < proc_time_mach[j]) then let proc_time_max := proc_time_mach[j];
+	# Check if job j is the second job in a (j_prec,q_follow)-pair, where this pair belongs to the set Q_PREC,  
+	# and time v_jq is required to pass between job j and job q. If this is the case, and v_jq has not passed 
+	# since termination of job j_prec, job q is put in the waiting_list, to be scheduled later
+	for {j_prec in Q_PREC} {
+		if (j <> maxjobs and j == q_follow[j_prec]) then {
+			if (waiting_list[j_prec] == 0 and (start_time[j_prec] + v_mach_jq_ext[j_prec]) > start_time[q_follow[j_prec]]) then {
+				# Job j is "descheduled and a new release date is set
+				let z_heur[j,chosen_k] := 0;
+				let s_time[chosen_k] := s_min;
+				let r_heur[j] := start_time[j_prec] + v_mach_jq_ext[j_prec];
+				let start_time[j] := M;
+				let waiting_list[j_prec] := 1;
+				print "Heuristic information: heuristic release date of q updated, because of the time v_jq_ext has to elapse after t_j, when (j,q) belongs to set Q";
+				print "Job descheduled";
+				display q_follow[j_prec], r_heur[j];
+				# If their are any succeeding job for the same part, we have to reset their release dates too
+				# max pairs of nested (j,q):s are 5 pairs (5 nested loops=
+				for {j_prec1 in Q_PREC} {
+					if (j_prec1 == q_follow[j_prec]) then {
+						let r_heur[q_follow[j_prec1]] := start_time[j_prec] + v_mach_jq_ext[j_prec] + v_mach_jq_ext[j_prec1];
+						let waiting_list[j_prec1] := 1;
+						print "Heuristic information: heuristic release date of q1 updated, for the succeeding pair";
+						display q_follow[j_prec1], r_heur[q_follow[j_prec1]];
+						for {j_prec2 in Q_PREC} {
+							if (j_prec2 == q_follow[j_prec1]) then {
+								let r_heur[q_follow[j_prec2]] := start_time[j_prec] + v_mach_jq_ext[j_prec] + v_mach_jq_ext[j_prec1] + v_mach_jq_ext[j_prec2];
+								let waiting_list[j_prec2] := 1;
+								print "Heuristic information: heuristic release date of q2 updated, for the succeeding pair";
+								for {j_prec3 in Q_PREC} {
+									if (j_prec3 == q_follow[j_prec2]) then {
+										let r_heur[q_follow[j_prec3]] := start_time[j_prec] + v_mach_jq_ext[j_prec] + v_mach_jq_ext[j_prec1] + v_mach_jq_ext[j_prec2] + v_mach_jq_ext[j_prec3];
+										let waiting_list[j_prec3] := 1;
+										print "Heuristic information: heuristic release date of q3 updated, for the succeeding pair";
+										for {j_prec4 in Q_PREC} {
+											if (j_prec4 == q_follow[j_prec3]) then {
+												let r_heur[q_follow[j_prec4]] := start_time[j_prec] + v_mach_jq_ext[j_prec] + v_mach_jq_ext[j_prec1] + v_mach_jq_ext[j_prec2] + v_mach_jq_ext[j_prec3] + v_mach_jq_ext[j_prec4];				
+												let waiting_list[j_prec4] := 1;
+												print "Heuristic information: heuristic release date of q4 updated, for the succeeding pair";
+											}
+										}
+									}
+								}
+							}
+						}
+					}	
+				}
+			}
+			else if (waiting_list[j_prec] == 1) then {
+			    if (start_time[j_prec] + v_mach_jq_ext[j_prec] > start_time[q_follow[j_prec]]) then {
+					# j = q_follow[j_prec] is in the waiting list and probably is not j_prec scheduled yet, so start_time[j_prec] = M.
+					# Hence we don't want to reset the release dates. But we do want to "deschedule" j and keep it in the waiting list:
+					let z_heur[j,chosen_k] := 0;
+					let s_time[chosen_k] := s_min;
+					let start_time[j] := M;
+					print "Heuristic information: The j_prec in the pair (j_prec,j) in Q has probably not been scheduled yet since the v_jq-constraint is not fulfilled.";
+					print "Job descheduled and put in the waiting list";
+					display q_follow[j_prec];
+				}
+				else {
+					# j = q_follow[j_prec] and has been scheduled OK, so we remove j_prec from the waiting_list
+					let waiting_list[j_prec] := 0;
+				}
+			}
+		}
+		else if (waiting_list[j_prec] == 1) then {
+			let s_min := M;
+			# Below a resource k is chosen in order to schedule the job q_follow[j_prec] which is not yet scheduled.
+			for {k in K_mach_RESOURCES}  {
+				if ( lambda_mach[q_follow[j_prec],k]==1  ) then { 
+					if (s_min > s_time[k]) then {
+						let s_min := s_time[k];
+						let chosen_k := k;				
+					}
+				}		
+			}
+			if (r_heur[q_follow[j_prec]] <= s_min) then {
+				let z_heur[q_follow[j_prec],chosen_k] := 1;
+				let start_time[q_follow[j_prec]] := s_min;
+				let s_time[chosen_k] := s_min + proc_time_mach[q_follow[j_prec]];
+				print "A job in the waiting list is scheduled after its release date";
+				display z_heur[q_follow[j_prec],chosen_k],q_follow[j_prec],chosen_k,s_min;	
+				let waiting_list[j_prec] := 0;
+			}
+			else if (j == maxjobs) then {
+				let s_min := r_heur[q_follow[j_prec]];
+				let z_heur[q_follow[j_prec],chosen_k] := 1;
+				let start_time[q_follow[j_prec]] := s_min;
+				let s_time[chosen_k] := s_min + proc_time_mach[q_follow[j_prec]];
+				print "The loop is finished and the rest of the jobs are scheduled";
+				display z_heur[q_follow[j_prec],chosen_k],q_follow[j_prec],chosen_k,s_min;	
+				let waiting_list[j_prec] := 0;
+			}
+		}
+	}
+}
+
+let s_max :=0;
+for {k in K_mach_RESOURCES} if (s_max < s_time[k]) then let s_max := s_time[k];
+
+# OBS OBS OBS - jag testar att ta bort min säkerhetslina, och väljer bara s_max som M
+# 2*proc_time_max is added to the max completion time of the jobs in the heuristic, so that 
+# there is room for at least 3 jobs to change scheduled resources in the optimization
+let M := s_max + 2*proc_time_max;
+
+#------------------------------------------------- END OF HEURISTIC -------------------------------------------------#
+
+print "Number of jobs: ", maxjobs;
+display M;
+print "";
+display a;
+option display_transpose 10;
+display proc_time;
+
+solve MTC3_mach;          		
+
+print "";
+print "----------Solution of the engineer's model - only machining processing operations--------------";
+print "----------z_mach_jk (which job j is scheduled to which resource k)-------------";
+
+let {j in JOBS, q in JOBS, k in K_RESOURCES} y_mach_solution[j,q,k] := 0;	#so y_mach_solution has a value for the non-machining resources
+let {j in JOBS, q in JOBS, k in K_mach_RESOURCES} y_mach_solution[j,q,k] := y_mach[j,q,k];
+
+let {j in JOBS, k in K_RESOURCES} z_mach_solution[j,k] := 0;	#so z_mach_solution has a value for the non-machining resources
+let {j in JOBS, k in K_mach_RESOURCES} z_mach_solution[j,k] := z_mach[j,k];
+
+option omit_zero_rows 0, display_transpose -10;
+display z_mach_solution;
+ 
+option omit_zero_rows 0, display_transpose 10;
+print "----------Starting time t_mach_j (hours from time 0)---------------------------";
+display t_mach; 
+print "----------Completion time s_j (hours)------------------------------------------";
+display s_mach; 
+print "----------Tardiness h_j (hours)------------------------------------------------";
+display h_mach; 
+
+solve MTC3_feas;
+
+print "";
+print "---------------------Solution of the feasibility problem---------------------------";
+print "----------z_ijk (which operation (i,j) is scheduled to which resource k)-------";
+
+option omit_zero_rows 0, display_transpose -10;
+display z;
+ 
+option omit_zero_rows 0, display_transpose 10;
+print "----------Starting time t_ij (If (tr) jobs j in rows,(hours)-------------------";
+display t; 
+print "----------Completion time s_j (hours)------------------------------------------";
+display s; 
+
+print "----------Tardiness h_j (hours)------------------------------------------------";
+display h;
+
+let proc_tardi_objective := sum{j in JOBS} (s[j]-t[1,j]+h[j]);
+
+print "---Sum of processing times and tardiness for the solution of the feasibility problem---";
+display proc_tardi_objective;
+
+  
+
+
+
