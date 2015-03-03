@@ -13,6 +13,8 @@ param timeStep;
 #----------------------Define Problems---------------------------------------------------------------------
 problem restrictedMasterProblem:  pi, gamma, restricted_master_dual, constraint1;
 # needs A and B also....
+
+problem columnGenerationSubproblem: column_generation_subproblem, start_constraints2_disc, flexconstraints_disc, not_same_time_constr_disc, x_nail;
 #----------------------------------------------------------------------------------------------------------
 print a_disc['MC1'];
 print maxjobs;
@@ -36,8 +38,22 @@ for{i in JOBS}{
 
 display x_nail[1,'MC1',a_disc['MC1']+1];
 
-#solve restrictedMasterProblem;
+# end of initialization
 
-display pi, gamma;
+for{iteration in 1..1}{
+  display pi, gamma;
+
+  solve restrictedMasterProblem;
+
+  display pi, gamma;
+
+  display x_nail[1,'MC1',1];
+
+  solve columnGenerationSubproblem;
+
+  display x_nail[1,'MC1',1];
+}
+
+
 
 
