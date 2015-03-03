@@ -15,6 +15,16 @@ problem restrictedMasterProblem:  pi, gamma, restricted_master_dual, constraint1
 # needs A and B also....
 
 problem columnGenerationSubproblem: column_generation_subproblem, start_constraints2_disc, flexconstraints_disc, not_same_time_constr_disc, x_nail;
+
+problem MTC4_disc: x_nail, s_disc, h_disc, Finish_times_and_tardiness_disc, opconstraints_disc, flexconstraints_disc, not_same_time_constr_disc, interop_time_constraints_disc, end_for_j_prec_constraints, start_constraints1_disc, start_constraints2_disc, completion_time_constraints_disc, tardiness_constraints_disc, end_constraints_disc;
+
+option cplex_options
+  'clocktype=2'
+  'mipdisplay=2'
+  'timing=1'
+  'timelimit=7200'
+  'mipgap=0.0000005'
+  ;
 #----------------------------------------------------------------------------------------------------------
 print a_disc['MC1'];
 print maxjobs;
@@ -36,23 +46,23 @@ for{i in JOBS}{
   let timeStep := timeStep + proc_time_disc[i];
 }
 
-display x_nail[1,'MC1',a_disc['MC1']+1];
-
 # end of initialization
 
-for{iteration in 1..1}{
-  display pi, gamma;
+#  display pi, gamma;
 
   solve restrictedMasterProblem;
+#  solve MTC4_disc;
+#  let {i in JOBS} pi[i] := x_nail[i,'MC1',1].dual;
+#  let {k in K_mach_RESOURCES} gamma[k] := x_nail[1,k,1].dual;
 
   display pi, gamma;
 
   display x_nail[1,'MC1',1];
+  display{j in JOBS} x_nail[j,'MC1',1];
+#  solve columnGenerationSubproblem;
 
-  solve columnGenerationSubproblem;
+#  display x_nail[1,'MC1',1];
 
-  display x_nail[1,'MC1',1];
-}
 
 
 
