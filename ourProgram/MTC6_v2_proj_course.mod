@@ -271,11 +271,16 @@ param B;
 var pi {JOBS} >= 0;
 var gamma {K_mach_RESOURCES} >= 0;
 
-# Discrete dual restrictet problem
+# Discrete dual restricted problem
 maximize restricted_master_dual:
-sum{j in JOBS} (pi[j]) + sum{k in K_mach_RESOURCES}(gamma[k]);
+  sum{j in JOBS} (pi[j]) + sum{k in K_mach_RESOURCES}(gamma[k]);
 
 subject to constraint1{k in K_mach_RESOURCES}:
 sum{j in JOBS}(sum{u in T_ALL_INTERVALS} (x_nail[j,k,u])*pi[j]) + gamma[k] <= sum{j in JOBS}(sum{u in T_ALL_INTERVALS} (A*(u+proc_time_disc[j]) + B*max(u + proc_time_disc[j] - d_disc[j], 0))*x_nail[j,k,u]);
 	 
+
+# Column generation subproblem
+# use start_constraints2_disc
+minimize column_generation_subproblem{k in K_mach_RESOURCES}:
+  sum{j in JOBS}( sum {u in T_ALL_INTERVALS}( (A*(u + proc_time_disc[j]) + B*max(u + proc_time_disc[j] - d_disc[j], 0 ) - pi[j])*x_nail[j,k,u] ) ) - gamma[k];
 

@@ -4,7 +4,8 @@ reset;
 option solver cplexamp;
 model MTC3_fix_y.mod;  						# load the optimization model
 
-data 20101117_15j_v_eng.dat;   					# load the model data
+data 20101117_5j_v_eng.dat;   					# load the model data
+# used to be 15j
 
 problem MTC3_mach: t_mach, z_mach, y_mach, s_mach, h_mach, Finish_times_and_tardiness_mach, opconstraints_mach,
 					flexconstraints_mach, both_y_not_1_constraints_mach, at_least_one_y_constraints_mach,
