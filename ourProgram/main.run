@@ -38,7 +38,11 @@ for{i in JOBS}{
 
 display x_nail[1,'MC1',a_disc['MC1']+1];
 
-for{iteration in 1..50}{
+# end of initialization
+
+for{iteration in 1..1}{
+  display pi, gamma;
+
   solve restrictedMasterProblem;
 
   display pi, gamma;
