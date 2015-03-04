@@ -11,8 +11,10 @@ param timeStep;
 
 #----------------------end define parameters --------------------------------------------------------------
 #----------------------Define Problems---------------------------------------------------------------------
-problem restrictedMasterProblem:  pi, gamma, restricted_master_dual, constraint1;
-# needs A and B also....
+problem restrictedMasterDual:  pi, gamma, restricted_master_dual, constraint1;
+# needs A and B also.... maybe....
+
+problem relaxedRestrictedMaster: tau, relaxed_restricted_master, constraint2, constraint3; 
 
 problem columnGenerationSubproblem: column_generation_subproblem, start_constraints2_disc, flexconstraints_disc, not_same_time_constr_disc, x_nail;
 
@@ -26,8 +28,6 @@ option cplex_options
   'mipgap=0.0000005'
   ;
 #----------------------------------------------------------------------------------------------------------
-print a_disc['MC1'];
-print maxjobs;
 
 let A:=1;
 let B:=1;
@@ -48,19 +48,23 @@ for{i in JOBS}{
 
 # end of initialization
 
+for { iteration in 1..10 }{
+  display constraint2;  # without this, segfault. with this, happy times.
+  print "hej";
+  solve relaxedRestrictedMaster;
+  print "hejhej";
+  display constraint2;
+  display constraint3;
+  let {j in JOBS} pi[j] := constraint2[j];
+  let {k in K_mach_RESOURCES} gamma[k] := constraint3[k];
+
 #  display pi, gamma;
 
-  solve restrictedMasterProblem;
-#  solve MTC4_disc;
-#  let {i in JOBS} pi[i] := x_nail[i,'MC1',1].dual;
-#  let {k in K_mach_RESOURCES} gamma[k] := x_nail[1,k,1].dual;
+  solve columnGenerationSubproblem;
+  print "hahhash";
+}
 
-  display pi, gamma;
-
-  display x_nail[1,'MC1',1];
-  display{j in JOBS} x_nail[j,'MC1',1];
-#  solve columnGenerationSubproblem;
-
+display pi, gamma;
 #  display x_nail[1,'MC1',1];
 
 

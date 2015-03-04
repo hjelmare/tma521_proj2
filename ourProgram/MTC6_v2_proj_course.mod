@@ -131,7 +131,7 @@ subject to start_constraints1_disc {j in JOBS, k in K_mach_RESOURCES, u in 0..r_
    x_nail[j,k,u] = 0;
 
 # Starting constraints, resource availability for the discrete machining problem
-subject to start_constraints2_disc {j in JOBS, k in K_mach_RESOURCES, u in 0..a_disc[k]}:
+subject to start_constraints2_disc {j in JOBS, k in K_mach_RESOURCES, u in 0..a_disc[k]-1 }:
    x_nail[j,k,u] = 0;
    
 # Define completion time for the discrete machining problem
@@ -270,6 +270,7 @@ param A; #Ändra denna?
 param B;
 var pi {JOBS} >= 0;
 var gamma {K_mach_RESOURCES} >= 0;
+var tau {K_mach_RESOURCES} binary;
 
 # Discrete dual restricted problem
 maximize restricted_master_dual:
@@ -277,6 +278,17 @@ maximize restricted_master_dual:
 
 subject to constraint1{k in K_mach_RESOURCES}:
 sum{j in JOBS}(sum{u in T_ALL_INTERVALS} (x_nail[j,k,u])*pi[j]) + gamma[k] <= sum{j in JOBS}(sum{u in T_ALL_INTERVALS} (A*(u+proc_time_disc[j]) + B*max(u + proc_time_disc[j] - d_disc[j], 0)*x_nail[j,k,u]));
+
+# LP relaxation of restricted master problem
+minimize relaxed_restricted_master:
+  sum {k in K_mach_RESOURCES} ( ( sum {j in JOBS} ( sum {u in T_ALL_INTERVALS} ( (A*(u + proc_time_disc[j]) + B*max(u + proc_time_disc[j] - d_disc[j], 0))*x_nail[j,k,u] ) ) )*tau[k] );
+
+subject to constraint2 {j in JOBS}:
+  sum{k in K_mach_RESOURCES} ( (sum{u in T_ALL_INTERVALS} (x_nail[j,k,u]))*tau[k] );
+
+subject to constraint3 {k in K_mach_RESOURCES}:
+  tau[k] = 1;
+
 	 
 
 # Column generation subproblem
