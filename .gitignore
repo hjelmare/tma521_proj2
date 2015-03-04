@@ -1,3 +1,5 @@
 *.dat
 *.zip
 *.swp
+.nfs*
+*.nfs*

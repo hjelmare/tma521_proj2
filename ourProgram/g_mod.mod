@@ -37,8 +37,6 @@ set T_ALL_INTERVALS := 0..T_HORIZON;    # Set of all discrete time intervals
 # PARAMETERS #
 
 param w;						# transport time
-param lMax;
-param l;
 param proc_time {I_OP,JOBS};	# processing time
 param proc_time_disc {JOBS};	# discrete processing time for the machining operation
 param lambda {I_OP,JOBS,K_RESOURCES};	# flexibility matrix
@@ -72,7 +70,7 @@ param p_postmach{JOBS};			# The sum processing and transport times for the opera
 # VARIABLES #
 
 var t {I_OP,JOBS} >= 0; 	  	# variable starting time
-var x_nail {JOBS,K_mach_RESOURCES,T_ALL_INTERVALS, 1..100} binary;   # discrete "nail-variable"
+var x_nail {JOBS,K_mach_RESOURCES,T_ALL_INTERVALS} binary;   # discrete "nail-variable"
 var z {I_OP,JOBS,K_RESOURCES} binary;  				# variable machine allocation
 var y {I_OP,JOBS,I_OP,JOBS,K_RESOURCES} binary; 	# variable for operation ordering in same resource
 var s {JOBS} >= 0;	  	  		# variable completion time
@@ -106,39 +104,39 @@ sum {j in JOBS} (s[j]-0.001*t[1,j]+h[j] + sum {i in ACTIVE_I[j], k in K_RESOURCE
 
 # One job is performed once and only once for the discrete machining problem
 subject to opconstraints_disc {j in JOBS}:
-   sum {k in K_mach_RESOURCES, u in T_ALL_INTERVALS} x_nail[j,k,u,l] = 1;
+   sum {k in K_mach_RESOURCES, u in T_ALL_INTERVALS} x_nail[j,k,u] = 1;
    
 # Each operation is scheduled to an allowed resource for the machining problem
 subject to flexconstraints_disc {j in JOBS, k in K_mach_RESOURCES}:
-   sum {u in T_ALL_INTERVALS} x_nail[j,k,u,l] <= lambda_mach[j,k];
+   sum {u in T_ALL_INTERVALS} x_nail[j,k,u] <= lambda_mach[j,k];
    
 # Resource k can only process one job at a time
 subject to not_same_time_constr_disc {k in K_mach_RESOURCES, u in 0..T_HORIZON}:   
-   sum{j in JOBS, v in max(u-proc_time_disc[j]+1,0)..u}x_nail[j,k,v,l] <= 1;
+   sum{j in JOBS, v in max(u-proc_time_disc[j]+1,0)..u}x_nail[j,k,v] <= 1;
    
 # Constraints of planned interoperation time for same production order for the machining problem
 subject to interop_time_constraints_disc {j_prec in Q_PREC, u in 0..(T_HORIZON-v_disc_jq_ext[j_prec])}:
-   sum {k in K_mach_RESOURCES} (sum{u_ext in 0..(u+v_disc_jq_ext[j_prec])}x_nail[q_follow[j_prec],k,u_ext,l] - sum{u_prec in 0..u}x_nail[j_prec,k,u_prec,l]) <= 0;
+   sum {k in K_mach_RESOURCES} (sum{u_ext in 0..(u+v_disc_jq_ext[j_prec])}x_nail[q_follow[j_prec],k,u_ext] - sum{u_prec in 0..u}x_nail[j_prec,k,u_prec]) <= 0;
    
 # Constraints for the end of the planning horizon, job j can not be scheduled too late, because job q has to be processed before the end of the planning horizon (for jobs (j,q) /in set Q)
 subject to end_for_j_prec_constraints {j_prec in Q_PREC, k in K_mach_RESOURCES, u in (T_HORIZON-v_disc_jq_ext[j_prec])..T_HORIZON}:
-	x_nail[j_prec,k,u,l] = 0;
+	x_nail[j_prec,k,u] = 0;
    
 #  Fix order of jobs for set P - detta kanske är en bra idé, men tar väldigt mycket minne...
 #subject to fix_order_constraints_P {(j_prec_P,q_follow_P) in P_SAME_JOBS, u in T_ALL_INTERVALS}: 
-#   sum {k in K_mach_RESOURCES} (x_nail[j_prec_P,k,u,l] + sum{u_P in 0..u}x_nail[q_follow_P,k,u_P,l]) <= 1;
+#   sum {k in K_mach_RESOURCES} (x_nail[j_prec_P,k,u] + sum{u_P in 0..u}x_nail[q_follow_P,k,u_P]) <= 1;
   
 # Starting constraints for the discrete machining problem
 subject to start_constraints1_disc {j in JOBS, k in K_mach_RESOURCES, u in 0..r_disc[j]}:
-   x_nail[j,k,u,l] = 0;
+   x_nail[j,k,u] = 0;
 
 # Starting constraints, resource availability for the discrete machining problem
-subject to start_constraints2_disc {j in JOBS, k in K_mach_RESOURCES, u in 0..a_disc[k]-1}:
-   x_nail[j,k,u,l] = 0;
+subject to start_constraints2_disc {j in JOBS, k in K_mach_RESOURCES, u in 0..a_disc[k]-1 }:
+   x_nail[j,k,u] = 0;
    
 # Define completion time for the discrete machining problem
 subject to completion_time_constraints_disc {j in JOBS}:
-   sum {k in K_mach_RESOURCES, u in T_ALL_INTERVALS} u*x_nail[j,k,u,l] + p_j_o_postmach_disc[j] = s_disc[j];
+   sum {k in K_mach_RESOURCES, u in T_ALL_INTERVALS} u*x_nail[j,k,u] + p_j_o_postmach_disc[j] = s_disc[j];
    
 # Define tardiness
 subject to tardiness_constraints_disc {j in JOBS}:
@@ -146,7 +144,7 @@ subject to tardiness_constraints_disc {j in JOBS}:
 
 # Ending constraints for the discrete machining problem, job j cannot be started too late, so that it is impossible to complete before the end of the schedule
 subject to end_constraints_disc {j in JOBS, k in K_mach_RESOURCES, u in (T_HORIZON - proc_time_disc[j])..T_HORIZON}:
-   x_nail[j,k,u,l] = 0;
+   x_nail[j,k,u] = 0;
    
 #---------------------------------------#   
 
@@ -278,12 +276,23 @@ var tau {K_mach_RESOURCES} binary;
 maximize restricted_master_dual:
   sum{j in JOBS} (pi[j]) + sum{k in K_mach_RESOURCES}(gamma[k]);
 
-subject to constraint1{k in K_mach_RESOURCES, m in 1..lMax}:
-sum{j in JOBS}(sum{u in T_ALL_INTERVALS} (x_nail[j,k,u,m])*pi[j]) + gamma[k] <= sum{j in JOBS}(sum{u in T_ALL_INTERVALS} (A*(u+proc_time_disc[j]) + B*max(u + proc_time_disc[j] - d_disc[j], 0)*x_nail[j,k,u,m]));
+subject to constraint1{k in K_mach_RESOURCES}:
+sum{j in JOBS}(sum{u in T_ALL_INTERVALS} (x_nail[j,k,u])*pi[j]) + gamma[k] <= sum{j in JOBS}(sum{u in T_ALL_INTERVALS} (A*(u+proc_time_disc[j]) + B*max(u + proc_time_disc[j] - d_disc[j], 0)*x_nail[j,k,u]));
+
+# LP relaxation of restricted master problem
+minimize relaxed_restricted_master:
+  sum {k in K_mach_RESOURCES} ( ( sum {j in JOBS} ( sum {u in T_ALL_INTERVALS} ( (A*(u + proc_time_disc[j]) + B*max(u + proc_time_disc[j] - d_disc[j], 0))*x_nail[j,k,u] ) ) )*tau[k] );
+
+subject to constraint2 {j in JOBS}:
+  sum{k in K_mach_RESOURCES} ( (sum{u in T_ALL_INTERVALS} (x_nail[j,k,u]))*tau[k] ) = 1;
+
+subject to constraint3 {k in K_mach_RESOURCES}:
+  tau[k] = 1;
+
 	 
 
 # Column generation subproblem
 # use start_constraints2_disc
 minimize column_generation_subproblem{k in K_mach_RESOURCES}:
-  sum{j in JOBS}( sum {u in T_ALL_INTERVALS}( (A*(u + proc_time_disc[j]) + B*max(u + proc_time_disc[j] - d_disc[j], 0 ) - pi[j])*x_nail[j,k,u,l] ) ) - gamma[k];
+  sum{j in JOBS}( sum {u in T_ALL_INTERVALS}( (A*(u + proc_time_disc[j]) + B*max(u + proc_time_disc[j] - d_disc[j], 0 ) - pi[j])*x_nail[j,k,u] ) ) - gamma[k];
 
