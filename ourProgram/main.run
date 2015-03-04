@@ -14,46 +14,68 @@ param timeStep;
 problem restrictedMasterProblem:  pi, gamma, restricted_master_dual, constraint1;
 # needs A and B also....
 
-problem columnGenerationSubproblem: column_generation_subproblem, start_constraints2_disc, flexconstraints_disc, not_same_time_constr_disc, x_nail;
+#problem columnGenerationSubproblem: column_generation_subproblem, start_constraints2_disc, flexconstraints_disc, not_same_time_constr_disc, x_nail;
 #----------------------------------------------------------------------------------------------------------
 print a_disc['MC1'];
 print maxjobs;
 
 let A:=1;
 let B:=1;
+let lMax := 1;
+let l := lMax;
 
 for {j in 1..maxjobs}{  #initierar x till 0 över alla index
   for{k in K_mach_RESOURCES}{
     for{u in 1..M}{
-      let x_nail[j,k,u] := 0;
+      let x_nail[j,k,u,1] := 0;
     }
   }
 }
 
 let timeStep := a_disc['MC1'];
 for{i in JOBS}{
-  let x_nail[1,'MC1',timeStep+1] := 1;
+  let x_nail[i,'MC1',timeStep+1,1] := 1;
   let timeStep := timeStep + proc_time_disc[i];
 }
 
-display x_nail[1,'MC1',a_disc['MC1']+1];
+#display {j in JOBS, u in T_ALL_INTERVALS} x_nail[j,'MC1', u, 1];
 
+display sum{u in T_ALL_INTERVALS}(x_nail[1,'MC1',u,1]);
+display sum{u in T_ALL_INTERVALS}(x_nail[1,'MC2',u,1]);
+display sum{u in T_ALL_INTERVALS}(x_nail[1,'MC3',u,1]);
+display sum{u in T_ALL_INTERVALS}(x_nail[1,'MC4',u,1]);
+display sum{u in T_ALL_INTERVALS}(x_nail[1,'MC5',u,1]);
 # end of initialization
 
 for{iteration in 1..1}{
-  display pi, gamma;
+  #display pi, gamma;
+  let lMax := lMax + 1;
+  let l := lMax;
+  
+  problem columnGenerationSubproblem: column_generation_subproblem, start_constraints2_disc, flexconstraints_disc, not_same_time_constr_disc, x_nail[*,*,*,l];
+
 
   solve restrictedMasterProblem;
 
-  display pi, gamma;
+  #display pi, gamma;
 
-  display x_nail[1,'MC1',1];
+  #display x_nail[1,'MC1',1];
 
   solve columnGenerationSubproblem;
 
-  display x_nail[1,'MC1',1];
+  #display x_nail[1,'MC1',1];
 }
+display sum{u in T_ALL_INTERVALS}(x_nail[1,'MC1',u,1]);
+display sum{u in T_ALL_INTERVALS}(x_nail[1,'MC2',u,1]);
+display sum{u in T_ALL_INTERVALS}(x_nail[1,'MC3',u,1]);
+display sum{u in T_ALL_INTERVALS}(x_nail[1,'MC4',u,1]);
+display sum{u in T_ALL_INTERVALS}(x_nail[1,'MC5',u,1]);
 
+display sum{u in T_ALL_INTERVALS}(x_nail[1,'MC1',u,l-1]);
+display sum{u in T_ALL_INTERVALS}(x_nail[1,'MC2',u,l-1]);
+display sum{u in T_ALL_INTERVALS}(x_nail[1,'MC3',u,l-1]);
+display sum{u in T_ALL_INTERVALS}(x_nail[1,'MC4',u,l-1]);
+display sum{u in T_ALL_INTERVALS}(x_nail[1,'MC5',u,l-1]);
 
 
 

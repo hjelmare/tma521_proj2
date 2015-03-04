@@ -1,20 +1,12 @@
 reset;
 
-var variable{1..5};
+var a{1..5,1..500};
 
+display a;
 
 for {i in 1..5}{
-  let variable[i] := i+3;
+  let a[i,1] := i;
 }
-display variable;
 
-print variable[1];
-
-param a{1..5};
-
-let a[1] := 1;
-display a[1];
-
-let a:=10;
 display a;
 
