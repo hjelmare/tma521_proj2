@@ -16,7 +16,7 @@ problem restrictedMasterDual:  pi, gamma, restricted_master_dual, constraint1;
 
 problem relaxedRestrictedMaster: tau, relaxed_restricted_master, constraint2, constraint3; 
 
-#problem columnGenerationSubproblem: column_generation_subproblem, start_constraints2_disc, flexconstraints_disc, not_same_time_constr_disc, x_nail;
+problem columnGenerationSubproblem: column_generation_subproblem, start_constraints2_disc, flexconstraints_disc, not_same_time_constr_disc, x_nail;
 #----------------------------------------------------------------------------------------------------------
 
 let A:=1;
@@ -47,15 +47,15 @@ display sum{u in T_ALL_INTERVALS}(x_nail[1,'MC4',u,1]);
 display sum{u in T_ALL_INTERVALS}(x_nail[1,'MC5',u,1]);
 # end of initialization
 
-for{iteration in 1..1}{
+for{iteration in 1..10}{
   #display pi, gamma;
   let lMax := lMax + 1;
   let l := lMax;
   
-  problem columnGenerationSubproblem: column_generation_subproblem, start_constraints2_disc, flexconstraints_disc, not_same_time_constr_disc, x_nail[*,*,*,l];
+  #problem columnGenerationSubproblem: column_generation_subproblem, start_constraints2_disc, flexconstraints_disc, not_same_time_constr_disc, x_nail[*,*,*,l];
 
 
-  solve restrictedMasterProblem;
+  solve relaxedRestrictedMaster;
 
   #display pi, gamma;
 
