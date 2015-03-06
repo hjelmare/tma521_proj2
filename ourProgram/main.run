@@ -12,10 +12,10 @@ param x_col;
 
 #----------------------end define parameters --------------------------------------------------------------
 #----------------------Define Problems---------------------------------------------------------------------
-problem restrictedMasterDual:  pi, gamma, restricted_master_dual, constraint1;
+#problem restrictedMasterDual:  pi, gamma, restricted_master_dual, constraint1;
 # needs A and B also.... maybe....
 
-problem relaxedRestrictedMaster: tau, relaxed_restricted_master, constraint2, constraint3; 
+problem relaxedRestrictedMaster: tau, relaxed_restricted_master, constraint2, constraint3, tauLargerThanZero_constraint; 
 #option cplex_options
 #'clocktype=2'
 #'mipdisplay=2'
@@ -27,13 +27,12 @@ problem relaxedRestrictedMaster: tau, relaxed_restricted_master, constraint2, co
 #;
 #option solver_msg 0;
 
-problem columnGenerationSubproblem: column_generation_subproblem, start_constraints2_disc, flexconstraints_disc, not_same_time_constr_disc, x;
+problem columnGenerationSubproblem: column_generation_subproblem, start_constraints1_disc, start_constraints2_disc, flexconstraints_disc, not_same_time_constr_disc, x;
 #----------------------------------------------------------------------------------------------------------
 
 let A:=1;
 let B:=1;
 let lMax := 1;
-let l := lMax;
 
 
 for {j in 1..maxjobs}{  #initierar x till 0 över alla index
@@ -67,7 +66,7 @@ display sum{j in JOBS, u in T_ALL_INTERVALS}(x_nail[j,'MC5',u,1]);
 # end of initialization
 
 
-for{iteration in 1..2}{
+for{iteration in 1..30}{
   #display pi, gamma;
 
   #solve restrictedMasterDual;
@@ -75,23 +74,18 @@ for{iteration in 1..2}{
   let{i in JOBS} pi[i] := constraint2.dual[i] ;
   let{k in K_mach_RESOURCES} gamma[k] := constraint3.dual[k];
 
-  display tau;
+  #display tau;
   display pi, gamma;
 
   #display x_nail[1,'MC1',1];
   let lMax := lMax + 1;
-  let l := lMax;
   
-  let p := 1;
-  for {k in K_mach_RESOURCES}{
-    solve columnGenerationSubproblem;
-    display k, p;
-    let { j in JOBS, u in T_ALL_INTERVALS} x_nail[j,k,u,l] := x[j,u];
-    let p := p + 1;
-    display 'end';
-  }
-  let p := 1;
-
+  solve columnGenerationSubproblem;
+  let {j in JOBS, k in K_mach_RESOURCES, u in T_ALL_INTERVALS} x_nail[j,k,u,lMax] := x[j,k,u];
+  
+ for {k in K_mach_RESOURCES}{ 
+    display sum{j in JOBS, u in T_ALL_INTERVALS}( (A*(u + proc_time_disc[j]) + B*max(u + proc_time_disc[j] - d_disc[j], 0 ) - pi[j])*x[j,k,u]  ) - gamma[k];
+ }
   #display x_nail[1,'MC1',1];
 }
 
@@ -102,11 +96,11 @@ display sum{j in JOBS, u in T_ALL_INTERVALS}(x_nail[j,'MC3',u,1]);
 display sum{j in JOBS, u in T_ALL_INTERVALS}(x_nail[j,'MC4',u,1]);
 display sum{j in JOBS, u in T_ALL_INTERVALS}(x_nail[j,'MC5',u,1]);
 
-display '||||||||||||||||||||||||||||||||||---------------------------------------------------------||||||||||||||||||||||';
+display '||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||';
 
-display sum{j in JOBS, u in T_ALL_INTERVALS}(x_nail[j,'MC1',u,l]);
-display sum{j in JOBS, u in T_ALL_INTERVALS}(x_nail[j,'MC2',u,l]);
-display sum{j in JOBS, u in T_ALL_INTERVALS}(x_nail[j,'MC3',u,l]);
-display sum{j in JOBS, u in T_ALL_INTERVALS}(x_nail[j,'MC4',u,l]);
-display sum{j in JOBS, u in T_ALL_INTERVALS}(x_nail[j,'MC5',u,l]);
+display sum{j in JOBS, u in T_ALL_INTERVALS}(x_nail[j,'MC1',u,lMax]);
+display sum{j in JOBS, u in T_ALL_INTERVALS}(x_nail[j,'MC2',u,lMax]);
+display sum{j in JOBS, u in T_ALL_INTERVALS}(x_nail[j,'MC3',u,lMax]);
+display sum{j in JOBS, u in T_ALL_INTERVALS}(x_nail[j,'MC4',u,lMax]);
+display sum{j in JOBS, u in T_ALL_INTERVALS}(x_nail[j,'MC5',u,lMax]);
 
