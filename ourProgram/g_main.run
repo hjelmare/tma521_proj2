@@ -31,18 +31,20 @@ option cplex_options
 
 let A:=1;
 let B:=1;
+let lMax := 1;
+let l := lMax;
 
 for {j in 1..maxjobs}{  #initierar x till 0 över alla index
   for{k in K_mach_RESOURCES}{
     for{u in 1..M}{
-      let x_nail[j,k,u] := 0;
+      let x_nail[j,k,u,1] := 0;
     }
   }
 }
 
 let timeStep := a_disc['MC1'];
 for{i in JOBS}{
-  let x_nail[i,'MC1',timeStep+1] := 1;
+  let x_nail[i,'MC1',timeStep+1,1] := 1;
   let timeStep := timeStep + proc_time_disc[i];
 }
 
