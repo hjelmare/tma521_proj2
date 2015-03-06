@@ -1,7 +1,7 @@
 reset;
 
 option solver cplexamp;
-model MTC6_v2_proj_course.mod;
+model g_ny.mod;
 
 data 2010-11-17_15j_MTC6.dat;
 
@@ -48,6 +48,8 @@ for{j in JOBS}{
   let timeStep[p] := timeStep[p] + proc_time_disc[j];
 }
 
+display {j in JOBS, k in K_mach_RESOURCES, u in T_ALL_INTERVALS} x_nail[j,k,u,1] > x_out.txt;
+
 
 display sum{j in JOBS, u in T_ALL_INTERVALS}(x_nail[j,'MC1',u,1]);
 display sum{j in JOBS, u in T_ALL_INTERVALS}(x_nail[j,'MC2',u,1]);
@@ -61,6 +63,7 @@ for{iteration in 1..30}{
 
 #  solve restrictedMasterDual;
   solve relaxedRestrictedMaster;
+  display relaxed_restricted_master.val > res_out.txt;
   let{i in JOBS} pi[i] := constraint2.dual[i] ;
   let{k in K_mach_RESOURCES} gamma[k] := constraint3.dual[k];
 
@@ -70,23 +73,19 @@ for{iteration in 1..30}{
   #display x_nail[1,'MC1',1];
   let lMax := lMax + 1;
   let l := lMax;
-#  print "utanfor";
-#  display x;
 
   let p := 1;
   for {k in K_mach_RESOURCES}{
     solve columnGenerationSubproblem;
-    print "inuti";
-#    display x;
-#    display k, p;
+    display column_generation_subproblem.val >> sub_out.txt;
     let { j in JOBS, u in T_ALL_INTERVALS} x_nail[j,k,u,l] := x[j,u];
     let p := p + 1;
-#    display 'end';
   }
   let p := 1;
 
-  #display x_nail[1,'MC1',1];
+  #display x_nail[1,'MC1',1];i
 }
+
 
 
 display sum{j in JOBS, u in T_ALL_INTERVALS}(x_nail[j,'MC1',u,1]);
