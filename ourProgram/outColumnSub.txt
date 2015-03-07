@@ -1,0 +1,300 @@
+column_generation_subproblem = 0
+
+column_generation_subproblem = -36807.7
+
+column_generation_subproblem = -2317.9
+
+column_generation_subproblem = -11100
+
+column_generation_subproblem = -3249.6
+
+column_generation_subproblem = -37107.9
+
+column_generation_subproblem = -37107.9
+
+column_generation_subproblem = -11000.2
+
+column_generation_subproblem = -11000.2
+
+column_generation_subproblem = -2200.2
+
+column_generation_subproblem = -37124.7
+
+column_generation_subproblem = -37124.7
+
+column_generation_subproblem = -11017
+
+column_generation_subproblem = -11017
+
+column_generation_subproblem = -2217
+
+column_generation_subproblem = -36789.7
+
+column_generation_subproblem = -36789.7
+
+column_generation_subproblem = -10682
+
+column_generation_subproblem = -10682
+
+column_generation_subproblem = -2082
+
+column_generation_subproblem = -36905.8
+
+column_generation_subproblem = -36905.8
+
+column_generation_subproblem = -3000
+
+column_generation_subproblem = -3000
+
+column_generation_subproblem = 0
+
+column_generation_subproblem = -37404.1
+
+column_generation_subproblem = -37404.1
+
+column_generation_subproblem = -5000
+
+column_generation_subproblem = -5000
+
+column_generation_subproblem = 0
+
+column_generation_subproblem = -37404.1
+
+column_generation_subproblem = -37404.1
+
+column_generation_subproblem = -4800
+
+column_generation_subproblem = -4800
+
+column_generation_subproblem = 0
+
+column_generation_subproblem = -43600.7
+
+column_generation_subproblem = -43600.7
+
+column_generation_subproblem = -6096.5
+
+column_generation_subproblem = -5100
+
+column_generation_subproblem = 0
+
+column_generation_subproblem = -38416.5
+
+column_generation_subproblem = -38416.5
+
+column_generation_subproblem = -3853.15
+
+column_generation_subproblem = -3503.5
+
+column_generation_subproblem = 0
+
+column_generation_subproblem = -9906.99
+
+column_generation_subproblem = -9906.99
+
+column_generation_subproblem = -1300
+
+column_generation_subproblem = -1300
+
+column_generation_subproblem = 0
+
+column_generation_subproblem = -15105.9
+
+column_generation_subproblem = -15105.9
+
+column_generation_subproblem = -5122.63
+
+column_generation_subproblem = -3503.5
+
+column_generation_subproblem = 0
+
+column_generation_subproblem = -15489.4
+
+column_generation_subproblem = -15489.4
+
+column_generation_subproblem = -2462.59
+
+column_generation_subproblem = -2462.59
+
+column_generation_subproblem = 0
+
+column_generation_subproblem = -25217.9
+
+column_generation_subproblem = -25217.9
+
+column_generation_subproblem = -1300
+
+column_generation_subproblem = -1300
+
+column_generation_subproblem = 0
+
+column_generation_subproblem = -13133.7
+
+column_generation_subproblem = -13133.7
+
+column_generation_subproblem = -1400
+
+column_generation_subproblem = -1400
+
+column_generation_subproblem = 0
+
+column_generation_subproblem = -12415.2
+
+column_generation_subproblem = -12415.2
+
+column_generation_subproblem = -2804.2
+
+column_generation_subproblem = -2804.2
+
+column_generation_subproblem = 0
+
+column_generation_subproblem = -5531.88
+
+column_generation_subproblem = -5531.88
+
+column_generation_subproblem = -1400
+
+column_generation_subproblem = -1400
+
+column_generation_subproblem = -100
+
+column_generation_subproblem = -5609.55
+
+column_generation_subproblem = -5609.55
+
+column_generation_subproblem = -1400
+
+column_generation_subproblem = -1400
+
+column_generation_subproblem = 0
+
+column_generation_subproblem = -7715.59
+
+column_generation_subproblem = -7715.59
+
+column_generation_subproblem = -3045.32
+
+column_generation_subproblem = -3045.32
+
+column_generation_subproblem = -1263.45
+
+column_generation_subproblem = -8536.25
+
+column_generation_subproblem = -8536.25
+
+column_generation_subproblem = -5995.16
+
+column_generation_subproblem = -5995.16
+
+column_generation_subproblem = -2747.53
+
+column_generation_subproblem = -5643.38
+
+column_generation_subproblem = -5643.38
+
+column_generation_subproblem = -2804.2
+
+column_generation_subproblem = -2804.2
+
+column_generation_subproblem = -100.1
+
+column_generation_subproblem = -7199.95
+
+column_generation_subproblem = -7199.95
+
+column_generation_subproblem = -2804.2
+
+column_generation_subproblem = -2804.2
+
+column_generation_subproblem = -100.1
+
+column_generation_subproblem = -7474.73
+
+column_generation_subproblem = -7474.73
+
+column_generation_subproblem = -4028.88
+
+column_generation_subproblem = -2804.2
+
+column_generation_subproblem = -100.1
+
+column_generation_subproblem = -6658.19
+
+column_generation_subproblem = -6658.19
+
+column_generation_subproblem = -3818.17
+
+column_generation_subproblem = -2804.2
+
+column_generation_subproblem = -100.1
+
+column_generation_subproblem = -6560.02
+
+column_generation_subproblem = -6560.02
+
+column_generation_subproblem = -3423.14
+
+column_generation_subproblem = -2804.2
+
+column_generation_subproblem = -100.1
+
+column_generation_subproblem = -8050.5
+
+column_generation_subproblem = -8050.5
+
+column_generation_subproblem = -3603.9
+
+column_generation_subproblem = -2804.2
+
+column_generation_subproblem = -100.1
+
+column_generation_subproblem = -8400
+
+column_generation_subproblem = -8400
+
+column_generation_subproblem = -3703.9
+
+column_generation_subproblem = -2804.2
+
+column_generation_subproblem = -100.1
+
+column_generation_subproblem = -6821.05
+
+column_generation_subproblem = -6821.05
+
+column_generation_subproblem = -3809.16
+
+column_generation_subproblem = -2804.2
+
+column_generation_subproblem = -100.1
+
+column_generation_subproblem = -6850
+
+column_generation_subproblem = -6850
+
+column_generation_subproblem = -3703.9
+
+column_generation_subproblem = -2804.2
+
+column_generation_subproblem = -100.1
+
+column_generation_subproblem = -6400
+
+column_generation_subproblem = -6400
+
+column_generation_subproblem = -3637.03
+
+column_generation_subproblem = -2804.2
+
+column_generation_subproblem = -100.1
+
+column_generation_subproblem = -6000.2
+
+column_generation_subproblem = -6000.2
+
+column_generation_subproblem = -3702.9
+
+column_generation_subproblem = -2804.2
+
+column_generation_subproblem = -100.1
+
