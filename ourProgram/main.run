@@ -31,7 +31,7 @@ problem columnGenerationSubproblem: column_generation_subproblem, start_constrai
 #----------------------------------------------------------------------------------------------------------
 
 let A:=1;
-let B:=1;
+let B:=0.1;
 let lMax := 1;
 
 
@@ -71,11 +71,14 @@ for{iteration in 1..30}{
 
   #solve restrictedMasterDual;
   solve relaxedRestrictedMaster;
+  print relaxed_restricted_master.val >> outRestricted.txt;
   let{i in JOBS} pi[i] := constraint2.dual[i] ;
   let{k in K_mach_RESOURCES} gamma[k] := constraint3.dual[k];
 
   #display tau;
   display pi, gamma;
+  print {j in JOBS} pi[j] >> outPi.txt;
+  print {k in K_mach_RESOURCES} gamma[k] >> outGamma.txt;
 
   #display x_nail[1,'MC1',1];
   let lMax := lMax + 1;

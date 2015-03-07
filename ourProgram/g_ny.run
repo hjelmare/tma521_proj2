@@ -19,7 +19,7 @@ problem relaxedRestrictedMaster: tau, relaxed_restricted_master, constraint2, co
 problem columnGenerationSubproblem: column_generation_subproblem, start_constraints2_disc, flexconstraints_disc, not_same_time_constr_disc, x;
 #----------------------------------------------------------------------------------------------------------
 
-let A:=100;
+let A:=1;
 let B:=0.1;
 let lMax := 1;
 let l := lMax;
@@ -40,7 +40,7 @@ let timeStep[5] := a_disc['MC5'];
 for{j in JOBS}{
   let p := 5;
   repeat while lambda_mach[j,member(p,K_mach_RESOURCES)] = 0 {
-    let p := p -1;
+    let p := p - 1;
   };
   let x_nail[j,member(p,K_mach_RESOURCES),timeStep[p]+1,1] := 1;
   let timeStep[p] := timeStep[p] + proc_time_disc[j];
@@ -57,8 +57,9 @@ for{iteration in 1..30}{
   #display pi, gamma;
 
 #  solve restrictedMasterDual;
+#  print restricted_master_dual.val >> outRestricted.txt;
   solve relaxedRestrictedMaster;
-  display relaxed_restricted_master.val > outRestricted.txt;
+  print relaxed_restricted_master.val >> outRestricted.txt;
   let{i in JOBS} pi[i] := constraint2.dual[i] ;
   let{k in K_mach_RESOURCES} gamma[k] := constraint3.dual[k];
 
@@ -67,20 +68,18 @@ for{iteration in 1..30}{
   print {j in JOBS} pi[j] >> outPi.txt;
   print {k in K_mach_RESOURCES} gamma[k] >> outGamma.txt;
 
-  #display x_nail[1,'MC1',1];
   let lMax := lMax + 1;
   let l := lMax;
 
   let p := 1;
   for {k in K_mach_RESOURCES}{
     solve columnGenerationSubproblem;
-    display column_generation_subproblem.val >> outColumnSub.txt;
+    print column_generation_subproblem.val >> outColumnSub.txt;
     let { j in JOBS, u in T_ALL_INTERVALS} x_nail[j,k,u,l] := x[j,u];
     let p := p + 1;
   }
   let p := 1;
 
-  #display x_nail[1,'MC1',1];i
 }
 
 print {j in JOBS, k in K_mach_RESOURCES, u in T_ALL_INTERVALS, m in 1..lMax} x_nail[j,k,u,m] >outX.txt;
