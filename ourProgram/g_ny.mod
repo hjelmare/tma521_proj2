@@ -71,7 +71,6 @@ param p_postmach{JOBS};			# The sum processing and transport times for the opera
 
 #---------------------------------------#
 # VARIABLES #
-
 var pi {JOBS} >= 0;
 var gamma {K_mach_RESOURCES};
 var t {I_OP,JOBS} >= 0; 	  	# variable starting time

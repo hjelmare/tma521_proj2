@@ -11,6 +11,7 @@ set Q_PREC ordered;				# Set (j_prec) of jobs preceding q_follow(j_prec) for the
 								# (j_prec,q_follow(j_prec)) form together the set Q in the math model
 #set P_SAME_JOBS dimen 2;				# (j,q), set of pairs of jobs, where j and q are the same kind of jobs. j and q are ordered so that the release dates r_j =< r_q
 set T_ALL_INTERVALS := 0..T_HORIZON;    # Set of all discrete time intervals
+set ourSet := 0..1;
 								
 #---------------------------------------#
 # KARINS PARAMETERS #
@@ -55,45 +56,47 @@ param y_disc_solution{JOBS,JOBS,K_RESOURCES};	# the solution to the machining pr
 param T_length_interval;		# Length (hours) of one interval
 param resource_weight{K_RESOURCES};	# weight for the resources in order to avoid symmetries
 
-
 #---------------------------------------#
 # VARIABLES #
 
-var pi {JOBS} >= 0;
+var pi {JOBS};
+var gamma {K_mach_RESOURCES};
+var pi2 {JOBS};
+var gamma2 {K_mach_RESOURCES};
 var x_nail {JOBS,K_mach_RESOURCES,T_ALL_INTERVALS, 1..100} binary;   # discrete "nail-variable"
 var x{JOBS, K_mach_RESOURCES, T_ALL_INTERVALS} binary;
-var gamma {K_mach_RESOURCES} >= 0;
-var tau {K_mach_RESOURCES, 1..100};
+var tau {K_mach_RESOURCES, 1..100} >= 0;
 
+var final_tau {K_mach_RESOURCES, 1..lMax} binary;
 
 #---------------------------------------#
 # OBJECTIVES #
-# Discrete dual restricted problem - NOT USED!!
-#maximize restricted_master_dual:
-#  sum{j in JOBS} (pi[j]) + sum{k in K_mach_RESOURCES}(gamma[k]);
+# Discrete dual restricted problem
+maximize restricted_master_dual:
+  sum{j in JOBS}(pi[j]) + sum{k in K_mach_RESOURCES}(gamma[k]);
 
 # Column generation subproblem
-# use start_constraints2_disc
 minimize column_generation_subproblem{k in K_mach_RESOURCES}:
   sum{j in JOBS, u in T_ALL_INTERVALS}( (A*(u + proc_time_disc[j]) + B*max(u + proc_time_disc[j] - d_disc[j], 0 ) - pi[j])*x[j,k,u]  ) - gamma[k];
 
 
 # LP relaxation of restricted master problem
 minimize relaxed_restricted_master:
-  sum {k in K_mach_RESOURCES, m in 1..lMax}( sum {j in JOBS, u in T_ALL_INTERVALS} ( (A*(u + proc_time_disc[j]) + B*max(u + proc_time_disc[j] - d_disc[j], 0))*x_nail[j,k,u,m] ) *tau[k,m] );
+  sum {k in K_mach_RESOURCES, m in 1..lMax}( (sum{j in JOBS, u in T_ALL_INTERVALS}( (A*(u + proc_time_disc[j]) + B*(max(u + proc_time_disc[j] - d_disc[j], 0)))*x_nail[j,k,u,m] ))*tau[k,m] );
 
+
+
+# LP final restricted master problem
+minimize final_relaxed_restricted_master:
+  sum {k in K_mach_RESOURCES, m in 1..lMax}( (sum{j in JOBS, u in T_ALL_INTERVALS}( (A*(u + proc_time_disc[j]) + B*(max(u + proc_time_disc[j] - d_disc[j], 0)))*x_nail[j,k,u,m] ))*final_tau[k,m] );
 #------------------------------------------------------------#
 #-------Constraints for restricted master problem------------#
 
 subject to constraint2 {j in JOBS}:
-  sum{k in K_mach_RESOURCES, m in 1..lMax} (sum{u in T_ALL_INTERVALS} (x_nail[j,k,u,m])*tau[k,m] ) = 1;
+  sum{k in K_mach_RESOURCES, m in 1..lMax}((sum{u in T_ALL_INTERVALS}(x_nail[j,k,u,m]))*tau[k,m] ) = 1;
 
 subject to constraint3 {k in K_mach_RESOURCES}:
   sum{m in 1..lMax}(tau[k,m]) = 1;
-
-subject to tauLargerThanZero_constraint{m in 1..lMax, k in K_mach_RESOURCES}:
-  tau[k,m] >= 0;
-
 
 #------------------------------------------------------------#
 #------Constraints for column generation (subprob)-----------#
@@ -104,20 +107,26 @@ subject to flexconstraints_disc {k in K_mach_RESOURCES, j in JOBS}:
 
 # Resource k can only process one job at a time
 subject to not_same_time_constr_disc {k in K_mach_RESOURCES, u in T_ALL_INTERVALS}:   
-   sum{j in JOBS, v in max(u-proc_time_disc[j]+1,0)..u}x[j,k,v] <= 1;
+   sum{j in JOBS, v in max(u-proc_time_disc[j]+1,0)..u} (x[j,k,v]) <= 1;
 
 # Starting constraints for the discrete machining problem
-subject to start_constraints1_disc {k in K_mach_RESOURCES, j in JOBS, u in 0..r_disc[j] - 1}:
-   x_nail[j,k,u,lMax] = 0;
-
-# Starting constraints, resource availability for the discrete machining problem
-subject to start_constraints2_disc {k in K_mach_RESOURCES, j in JOBS,  u in 0..a_disc[k] - 1}:
+subject to start_constraints1_disc {k in K_mach_RESOURCES, j in JOBS, u in 0..(a[k] - 1)}:
    x[j,k,u] = 0;
-
 
 #------------------------------------------------------------#
 #-----Constraints to restricted master dual------------------#
 
 #NOT USED
-#subject to constraint1{ m in 1..lMax, k in K_mach_RESOURCES}:
-#sum{j in JOBS}(sum{u in T_ALL_INTERVALS} (x_nail[j,k,u,m])*pi[j]) + gamma[k] <= sum{j in JOBS}(sum{u in T_ALL_INTERVALS} (A*(u+proc_time_disc[j]) + B*max(u + proc_time_disc[j] - d_disc[j], 0)*x_nail[j,k,u,m]));
+subject to constraint1{ m in 1..lMax, k in K_mach_RESOURCES}:
+  sum{j in JOBS}( (sum{u in T_ALL_INTERVALS}(x_nail[j,k,u,m]))*pi[j]) + gamma[k] <= sum{j in JOBS, u in T_ALL_INTERVALS}((A*(u+proc_time_disc[j]) + B*(max(u + proc_time_disc[j] - d_disc[j], 0)))*x_nail[j,k,u,m]);
+
+#-----------------------------------------------------------#
+#---Constraints to final_relaxed restricted_master----------#
+
+subject to final_constraint2 {j in JOBS}:
+  sum{k in K_mach_RESOURCES, m in 1..lMax}((sum{u in T_ALL_INTERVALS}(x_nail[j,k,u,m]))*final_tau[k,m] ) = 1;
+
+subject to final_constraint3 {k in K_mach_RESOURCES}:
+  sum{m in 1..lMax}(final_tau[k,m]) = 1;
+
+
