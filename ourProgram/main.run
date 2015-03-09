@@ -9,30 +9,29 @@ data 2010-11-17_15j_MTC6.dat;
 #param x{1..maxjobs,1..5, 1..M};
 param timeStep{1..5};
 param x_col;
+param dec_cost{K_mach_RESOURCES};
+param exitCriteria;
+param iIteration;
+param LBD;
+param UBD;
 
 #----------------------end define parameters --------------------------------------------------------------
 #----------------------Define Problems---------------------------------------------------------------------
-#problem restrictedMasterDual:  pi, gamma, restricted_master_dual, constraint1;
+problem restrictedMasterDual:  pi, gamma, restricted_master_dual, constraint1;
 # needs A and B also.... maybe....
 
-problem relaxedRestrictedMaster: tau, relaxed_restricted_master, constraint2, constraint3, tauLargerThanZero_constraint; 
-#option cplex_options
-#'clocktype=2'
-#'mipdisplay=2'
-#'timing=1'
-#'mipinterval=2000'
-#'timelimit=7200'
-#'mipgap=0.0000005'
-#'outlev=0'
-#;
-#option solver_msg 0;
+problem relaxedRestrictedMaster: tau, relaxed_restricted_master, constraint2, constraint3; 
 
-problem columnGenerationSubproblem: column_generation_subproblem, start_constraints1_disc, start_constraints2_disc, flexconstraints_disc, not_same_time_constr_disc, x;
+problem columnGenerationSubproblem: column_generation_subproblem, start_constraints1_disc, flexconstraints_disc, not_same_time_constr_disc, x;
+
+
+problem final_relaxedRestrictedMaster: final_tau, final_relaxed_restricted_master, final_constraint2, final_constraint3;
 #----------------------------------------------------------------------------------------------------------
 
 let A:=1;
 let B:=1;
 let lMax := 1;
+let exitCriteria := -10000;
 
 
 for {j in 1..maxjobs}{  #initierar x till 0 över alla index
@@ -66,15 +65,21 @@ display sum{j in JOBS, u in T_ALL_INTERVALS}(x_nail[j,'MC5',u,1]);
 # end of initialization
 
 
-for{iteration in 1..30}{
+let iIteration := 1;
+#repeat while exitCriteria < 0{
+for{iteration in 1..50}{
   #display pi, gamma;
 
-  #solve restrictedMasterDual;
-  solve relaxedRestrictedMaster;
-  let{i in JOBS} pi[i] := constraint2.dual[i] ;
-  let{k in K_mach_RESOURCES} gamma[k] := constraint3.dual[k];
+  solve restrictedMasterDual;
+
+#  solve relaxedRestrictedMaster;
+#  let{i in JOBS} pi[i] := constraint2.dual[i] ;
+#  let{k in K_mach_RESOURCES} gamma[k] := constraint3.dual[k];
+
+  
 
   #display tau;
+#  display pi, pi2, gamma, gamma2;
   display pi, gamma;
 
   #display x_nail[1,'MC1',1];
@@ -83,18 +88,31 @@ for{iteration in 1..30}{
   solve columnGenerationSubproblem;
   let {j in JOBS, k in K_mach_RESOURCES, u in T_ALL_INTERVALS} x_nail[j,k,u,lMax] := x[j,k,u];
   
+# Calculates the decreased cost for each machine
  for {k in K_mach_RESOURCES}{ 
-    display sum{j in JOBS, u in T_ALL_INTERVALS}( (A*(u + proc_time_disc[j]) + B*max(u + proc_time_disc[j] - d_disc[j], 0 ) - pi[j])*x[j,k,u]  ) - gamma[k];
+    let dec_cost[k] := sum{j in JOBS, u in T_ALL_INTERVALS}( (A*(u + proc_time_disc[j]) + B*max(u + proc_time_disc[j] - d_disc[j], 0 ) - pi[j])*x[j,k,u]  ) - gamma[k];
  }
+ let exitCriteria := min(dec_cost['MC1'], dec_cost['MC2'], dec_cost['MC3'], dec_cost['MC4'], dec_cost['MC5']);
   #display x_nail[1,'MC1',1];
+
+  let LBD := relaxed_restricted_master;
+  let UBD := restricted_master_dual;
+
+  let iIteration := iIteration +1;
+  display '                                                          ';
+  display iIteration;
+  display exitCriteria;
+  display UBD;
+  display LBD;
+  display '                                                          ';
 }
 
 
-display sum{j in JOBS, u in T_ALL_INTERVALS}(x_nail[j,'MC1',u,1]);
-display sum{j in JOBS, u in T_ALL_INTERVALS}(x_nail[j,'MC2',u,1]);
-display sum{j in JOBS, u in T_ALL_INTERVALS}(x_nail[j,'MC3',u,1]);
-display sum{j in JOBS, u in T_ALL_INTERVALS}(x_nail[j,'MC4',u,1]);
-display sum{j in JOBS, u in T_ALL_INTERVALS}(x_nail[j,'MC5',u,1]);
+solve relaxedRestrictedMaster;
+
+solve final_relaxedRestrictedMaster;
+display tau;
+display final_tau;
 
 display '||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||';
 

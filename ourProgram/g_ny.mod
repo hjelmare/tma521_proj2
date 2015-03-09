@@ -71,7 +71,6 @@ param p_postmach{JOBS};			# The sum processing and transport times for the opera
 
 #---------------------------------------#
 # VARIABLES #
-
 var pi {JOBS} >= 0;
 var t {I_OP,JOBS} >= 0; 	  	# variable starting time
 var x_nail {JOBS,K_mach_RESOURCES,T_ALL_INTERVALS, 1..100} binary;   # discrete "nail-variable"
@@ -304,7 +303,7 @@ minimize column_generation_subproblem:
 #-------------------------GUSTAVS------------------------
 
 # LP relaxation of restricted master problem
-minimize relaxed_restricted_master:
+minimize relaxed_restricted_master: 
   sum {k in K_mach_RESOURCES} (sum{m in 1..lMax}( ( sum {j in JOBS} ( sum {u in T_ALL_INTERVALS} ( (A*(u + proc_time_disc[j]) + B*max(u + proc_time_disc[j] - d_disc[j], 0))*x_nail[j,k,u,m] ) ) )*tau[k,m] ));
 
 subject to constraint2 {j in JOBS}:
