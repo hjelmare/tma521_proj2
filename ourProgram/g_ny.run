@@ -13,7 +13,6 @@ param x_col;
 #----------------------end define parameters --------------------------------------------------------------
 #----------------------Define Problems---------------------------------------------------------------------
 problem restrictedMasterDual:  pi, gamma, restricted_master_dual, constraint1;
-# needs A and B also.... maybe....
 
 problem relaxedRestrictedMaster: tau, relaxed_restricted_master, constraint2, constraint3; 
 
@@ -23,10 +22,9 @@ problem columnGenerationSubproblem: column_generation_subproblem, start_constrai
 #----------------------------------------------------------------------------------------------------------
 
 let A:=1;
-let B:=1;
+let B:=0.1;
 let lMax := 1;
 let l := lMax;
-
 
 for {j in 1..maxjobs}{  #initierar x till 0 över alla index
   for{k in K_mach_RESOURCES}{
@@ -44,14 +42,11 @@ let timeStep[5] := a_disc['MC5'];
 for{j in JOBS}{
   let p := 5;
   repeat while lambda_mach[j,member(p,K_mach_RESOURCES)] = 0 {
-    let p := p -1;
+    let p := p - 1;
   };
   let x_nail[j,member(p,K_mach_RESOURCES),timeStep[p]+1,1] := 1;
   let timeStep[p] := timeStep[p] + proc_time_disc[j];
 }
-
-display {j in JOBS, k in K_mach_RESOURCES, u in T_ALL_INTERVALS} x_nail[j,k,u,1] > x_out.txt;
-
 
 display sum{j in JOBS, u in T_ALL_INTERVALS}(x_nail[j,'MC1',u,1]);
 display sum{j in JOBS, u in T_ALL_INTERVALS}(x_nail[j,'MC2',u,1]);
@@ -64,38 +59,34 @@ for{iteration in 1..15}{
   #display pi, gamma;
 
 #  solve restrictedMasterDual;
+#  print restricted_master_dual.val >> outRestricted.txt;
   solve relaxedRestrictedMaster;
-  display relaxed_restricted_master.val > res_out.txt;
+  print relaxed_restricted_master.val >> outRestricted.txt;
   let{i in JOBS} pi[i] := constraint2.dual[i] ;
   let{k in K_mach_RESOURCES} gamma[k] := constraint3.dual[k];
 
   display tau;
   display pi, gamma;
+  print {j in JOBS} pi[j] >> outPi.txt;
+  print {k in K_mach_RESOURCES} gamma[k] >> outGamma.txt;
 
-  #display x_nail[1,'MC1',1];
   let lMax := lMax + 1;
   let l := lMax;
 
   let p := 1;
   for {k in K_mach_RESOURCES}{
     solve columnGenerationSubproblem;
-    display column_generation_subproblem.val >> sub_out.txt;
+    print column_generation_subproblem.val >> outColumnSub.txt;
     let { j in JOBS, u in T_ALL_INTERVALS} x_nail[j,k,u,l] := x[j,u];
     let p := p + 1;
   }
   let p := 1;
 
-  #display x_nail[1,'MC1',1];i
 }
 
-display '                                                                                                                                             ';
-                                                                                
-var final_tau {K_mach_RESOURCES, 1..lMax} binary;
-problem final_restrictedMaster: final_tau, relaxed_restricted_master, constraint2, constraint3; 
-solve final_restrictedMaster;
-display tau;
-display final_tau;
+print {j in JOBS, k in K_mach_RESOURCES, u in T_ALL_INTERVALS, m in 1..lMax} x_nail[j,k,u,m] >outX.txt;
 
+print {k in K_mach_RESOURCES, m in 1..lMax} tau[k,m] > outTau.txt;
 
 display sum{j in JOBS, u in T_ALL_INTERVALS}(x_nail[j,'MC1',u,1]);
 display sum{j in JOBS, u in T_ALL_INTERVALS}(x_nail[j,'MC2',u,1]);

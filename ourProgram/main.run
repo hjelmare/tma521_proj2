@@ -29,7 +29,7 @@ problem final_relaxedRestrictedMaster: final_tau, final_relaxed_restricted_maste
 #----------------------------------------------------------------------------------------------------------
 
 let A:=1;
-let B:=1;
+let B:=0.1;
 let lMax := 1;
 let exitCriteria := -10000;
 
@@ -76,11 +76,11 @@ for{iteration in 1..50}{
 #  let{i in JOBS} pi[i] := constraint2.dual[i] ;
 #  let{k in K_mach_RESOURCES} gamma[k] := constraint3.dual[k];
 
-  
-
   #display tau;
 #  display pi, pi2, gamma, gamma2;
   display pi, gamma;
+  print {j in JOBS} pi[j] >> outPi.txt;
+  print {k in K_mach_RESOURCES} gamma[k] >> outGamma.txt;
 
   #display x_nail[1,'MC1',1];
   let lMax := lMax + 1;
