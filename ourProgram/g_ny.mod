@@ -73,7 +73,7 @@ param p_postmach{JOBS};			# The sum processing and transport times for the opera
 # VARIABLES #
 
 var pi {JOBS} >= 0;
-var gamma {K_mach_RESOURCES} >= 0;
+var gamma {K_mach_RESOURCES};
 var t {I_OP,JOBS} >= 0; 	  	# variable starting time
 var x_nail {JOBS,K_mach_RESOURCES,T_ALL_INTERVALS, 1..100} binary;   # discrete "nail-variable"
 var x{JOBS, T_ALL_INTERVALS} binary;
