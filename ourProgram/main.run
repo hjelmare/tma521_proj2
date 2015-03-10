@@ -5,7 +5,6 @@ model MTC6_v2_proj_course.mod;
 
 #data 2010-11-17_15j_MTC6.dat;
 
-#data ../Alla_datfiler/2010-08-16_15j.dat; # en annan 15 jobbs data
 data ../Alla_datfiler/2010-08-16_30j.dat;
 #data ourData.dat
 #----------------------define parameters-------------------------------------------------------------------
