@@ -3,27 +3,17 @@ clc
 clf
 
 
-nSteps = 30;
 nJobs = 15;
 nMach = 5;
 
-UBD = dlmread('outRestricted.txt',' ');
-pi = dlmread('outPi.txt',' ');
-gamma = dlmread('outGamma.txt',' ');
-colSub = dlmread('outColumnSub.txt',' ');
+sched = load('final_x_15jobs.txt');
+%proc = load('asdf');
 
-pi = reshape(pi,nSteps,nJobs);
-gamma = reshape(gamma, nSteps, nMach);
-colSub = reshape(colSub, nSteps, nMach);
+cc = jet(15);
 
-bar(colSub)
-%%
-LBD = zeros(1,nSteps);
-for iStep = 1:nSteps
-    LBD(iStep) = sum(pi(iStep,:)) + sum(gamma(iStep,:));
+for i = 1:nJobs
+    plotParam = [sched(  ]
+    rectangle('Position',[i,2,5,3],'FaceColor',cc(i,:))
 end
 
-hold on
-plot(UBD,'bo-')
-plot(LBD,'r.-')
-hold off
+axis([0,30,0,10])
