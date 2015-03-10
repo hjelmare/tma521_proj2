@@ -48,9 +48,9 @@ let timeStep[3] := a_disc['MC3'];
 let timeStep[4] := a_disc['MC4'];
 let timeStep[5] := a_disc['MC5'];
 for{j in JOBS}{
-  let p := 5;
+  let p := 1;
   repeat while lambda_mach[j,member(p,K_mach_RESOURCES)] = 0 {
-    let p := p -1;
+    let p := p +1;
   };
   let x_nail[j,member(p,K_mach_RESOURCES),timeStep[p]+1,1] := 1;
   let timeStep[p] := timeStep[p] + proc_time_disc[j];
@@ -67,7 +67,7 @@ display sum{j in JOBS, u in T_ALL_INTERVALS}(x_nail[j,'MC5',u,1]);
 
 let iIteration := 1;
 #repeat while exitCriteria < 0{
-for{iteration in 1..50}{
+for{iteration in 1..130}{
   #display pi, gamma;
 
   solve restrictedMasterDual;

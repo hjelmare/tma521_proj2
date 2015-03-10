@@ -63,9 +63,9 @@ var pi {JOBS};
 var gamma {K_mach_RESOURCES};
 var pi2 {JOBS};
 var gamma2 {K_mach_RESOURCES};
-var x_nail {JOBS,K_mach_RESOURCES,T_ALL_INTERVALS, 1..100} binary;   # discrete "nail-variable"
+var x_nail {JOBS,K_mach_RESOURCES,T_ALL_INTERVALS, 1..150} binary;   # discrete "nail-variable"
 var x{JOBS, K_mach_RESOURCES, T_ALL_INTERVALS} binary;
-var tau {K_mach_RESOURCES, 1..100} >= 0;
+var tau {K_mach_RESOURCES, 1..150} >= 0;
 
 var final_tau {K_mach_RESOURCES, 1..lMax} binary;
 
