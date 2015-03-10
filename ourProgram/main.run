@@ -3,10 +3,10 @@ reset;
 option solver cplexamp;
 model MTC6_v2_proj_course.mod;
 
-data 2010-11-17_15j_MTC6.dat;
+#data 2010-11-17_15j_MTC6.dat;
 
 #data ../Alla_datfiler/2010-08-16_30j.dat;
-#data ../Alla_datfiler/2010-08-16_40j.dat;
+data ../Alla_datfiler/2010-08-16_40j.dat;
 #----------------------define parameters-------------------------------------------------------------------
 #param x{1..maxjobs,1..5, 1..M};
 param timeStep{1..5};
