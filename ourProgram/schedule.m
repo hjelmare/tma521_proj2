@@ -2,28 +2,27 @@ clear all
 clc
 clf
 
+xShift = 0.2;
+yShift = xShift;
 
-nSteps = 30;
-nJobs = 15;
-nMach = 5;
+sched = load('final_x_15jobs.txt');
+proc = load('15jobs_procTime.txt');
+outFile = 'schedule15.png';
 
-UBD = dlmread('outRestricted.txt',' ');
-pi = dlmread('outPi.txt',' ');
-gamma = dlmread('outGamma.txt',' ');
-colSub = dlmread('outColumnSub.txt',' ');
+nJobs = length(sched);
 
-pi = reshape(pi,nSteps,nJobs);
-gamma = reshape(gamma, nSteps, nMach);
-colSub = reshape(colSub, nSteps, nMach);
+cc = jet(nJobs);
 
-%bar(gamma)
-%
-LBD = zeros(1,nSteps);
-for iStep = 1:nSteps
-    LBD(iStep) = sum(pi(iStep,:)) + sum(gamma(iStep,:));
+for i = 1:nJobs
+    plotParam = [sched(i,3), sched(i,2)-0.5, proc(i,2),1 ];
+    rectangle('Position',plotParam,'FaceColor',cc(i,:))
+    text(plotParam(1)+xShift, plotParam(2)+yShift, num2str(i))
 end
 
-hold on
-plot(UBD,'bo-')
-plot(LBD,'r.-')
-hold off
+axis([0,45,0,6])    % 15 jobs
+%axis([0,95,0,6])    % 30 jobs
+
+xlabel('Timestep','FontSize',14)
+ylabel('Machine nr','FontSize',14)
+
+saveas(gcf,outFile,'png');
