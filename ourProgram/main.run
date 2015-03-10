@@ -113,7 +113,7 @@ repeat while exitCriteria < -1e-10{
   display UBD;
   display LBD;
   display '                                                          ';
-  print iIteration, exitCriteria, UBD, LBD >> iterationResult_30jobs.txt;
+  print iIteration, _total_solve_time, exitCriteria, UBD, LBD > iterationResult_30jobs.txt;
 }
 
 
