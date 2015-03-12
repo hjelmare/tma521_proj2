@@ -4,9 +4,14 @@ option solver cplexamp;
 model MTC6_v2_proj_course.mod;
 
 #data 2010-11-17_15j_MTC6.dat;
-
 #data ../Alla_datfiler/2010-08-16_30j.dat;
-data ../Alla_datfiler/2010-08-16_40j.dat;
+#data ../Alla_datfiler/2010-08-16_40j.dat;
+
+#data ../Alla_datfiler/2010-11-17_15j.dat
+#data ../Alla_datfiler/2010-11-17_20j.dat
+#data ../Alla_datfiler/2010-11-17_30j.dat
+#data ../Alla_datfiler/2010-11-17_40j.dat
+data ../Alla_datfiler/2010-11-17_50j.dat
 #----------------------define parameters-------------------------------------------------------------------
 #param x{1..maxjobs,1..5, 1..M};
 param timeStep{1..5};
@@ -68,14 +73,8 @@ display sum{j in JOBS, u in T_ALL_INTERVALS}(x_nail[j,'MC5',u,1]);
 
 
 let iIteration := 1;
-<<<<<<< HEAD
-#repeat while exitCriteria < 0{
-for{iteration in 1..130}{
-  #display pi, gamma;
-=======
 repeat while exitCriteria < -1e-10{
 #for{iteration in 1..1}{
->>>>>>> 91727e19a7cead0d96553c0c01e8a7dbdf006b96
 
   solve restrictedMasterDual;
 
@@ -113,7 +112,7 @@ repeat while exitCriteria < -1e-10{
   display UBD;
   display LBD;
   display '                                                          ';
-  print iIteration, _total_solve_time, exitCriteria, UBD, LBD > iterationResult_40jobs.txt;
+  print iIteration, _total_solve_time, exitCriteria, UBD, LBD > iterationResult_50jobs.txt;
 }
 
 
@@ -135,7 +134,7 @@ for {m in 1..lMax}{
 
 for {j in JOBS, k in 1..5, u in T_ALL_INTERVALS}{
   if final_x[j,member(k,K_mach_RESOURCES),u] == 1 then {
-    printf "%3i%3i%3i\n" , j , k , u > final_x_40jobs.txt; 
+    printf "%3i%3i%3i\n" , j , k , u > final_x_50jobs.txt; 
   }
 }
 #display {j in JOBS, k in K_mach_RESOURCES, u in 1..15, m in 1..lMax} x_nail[j,k,u,m];

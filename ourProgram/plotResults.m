@@ -3,7 +3,7 @@ clear all
 clc
 close all
 
-data = dlmread('iterationResult_30jobs.txt',' ');
+data = dlmread('iterationResult_15jobs.txt',' ');
 iIteration = data(:,1);
 CPU = data(:,2);
 reducedCost = data(:,3);
